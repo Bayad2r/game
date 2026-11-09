@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>طابق واكتشف: حوكمة البيانات</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--c1:#190019;--c2:#2B124C;--c3:#522B5B;--c4:#854F6C;--c5:#DFB6B2;--c6:#FBE4D8;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100vh;font-family:'Tajawal',system-ui,sans-serif;color:var(--c6);background:linear-gradient(180deg,var(--c1),var(--c2) 55%,var(--c3));background-attachment:fixed}
+main{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:28px;font-weight:800;margin:6px 0 4px}
+.sub{color:var(--c5);margin:0 0 16px;font-size:16px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.stat{flex:1;background:rgba(251,228,216,.08);border-radius:999px;padding:8px 14px;text-align:center;font-weight:700;font-size:15px}
+.stat b{color:var(--c5)}
+button{font:inherit;cursor:pointer}
+.reset{background:var(--c6);color:var(--c1);border:0;border-radius:999px;padding:9px 18px;font-weight:700}
+.prog{height:8px;background:rgba(251,228,216,.12);border-radius:99px;overflow:hidden;margin-bottom:18px}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--c4),var(--c6));transition:width .4s}
+h2{font-size:17px;margin:18px 0 10px;font-weight:700;color:var(--c5)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:560px){.grid{grid-template-columns:repeat(3,1fr)}}
+.card{min-height:92px;border:2px solid transparent;border-radius:22px;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px;line-height:1.5;transition:transform .15s,background .25s,border-color .2s,opacity .3s}
+.card:focus-visible{outline:3px solid var(--c6);outline-offset:2px}
+.term{background:var(--c6);color:var(--c1);font-weight:800;font-size:17px}
+.term small{font-weight:500;color:var(--c3);font-size:13px;direction:ltr}
+.scn{background:var(--c3);color:var(--c6);font-size:14.5px;font-weight:500}
+.card.sel{border-color:var(--c5);transform:scale(1.04);box-shadow:0 0 0 4px rgba(223,182,178,.3)}
+.card.ok{background:var(--c4);color:var(--c6);opacity:.55;pointer-events:none}
+.card.ok small{color:var(--c6)}
+.card.bad{animation:sh .4s;border-color:#ff9a9a}
+@keyframes sh{25%{transform:translateX(7px)}75%{transform:translateX(-7px)}}
+.note{min-height:52px;margin-top:16px;padding:12px 16px;border-radius:18px;background:rgba(251,228,216,.08);color:var(--c6);font-size:15px;line-height:1.7}
+.win{display:none;margin-top:18px;background:var(--c6);color:var(--c1);border-radius:26px;padding:22px;text-align:center}
+.win.show{display:block}
+.win h3{margin:0 0 6px;font-size:24px;font-weight:800}
+.win p{margin:0 0 14px}
+.win button{background:var(--c2);color:var(--c6);border:0;border-radius:999px;padding:11px 26px;font-weight:700}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <h1>طابق واكتشف 🎮</h1>
+  <p class="sub">ما تحتاج خبرة! اربط كل كلمة بالموقف اللي يشبهها قبل لا يخلص الوقت</p>
+  <div class="bar">
+    <div class="stat">التطابق: <b id="m">0</b>/6</div>
+    <div class="stat">المحاولات: <b id="t">0</b></div>
+    <div class="stat">⏱ <b id="tm">90</b> ث</div>
+    <button class="reset" id="r">جولة جديدة</button>
+  </div>
+  <div class="prog"><i id="p"></i></div>
+  <h2>المصطلحات</h2>
+  <div class="grid" id="terms"></div>
+  <h2>المواقف</h2>
+  <div class="grid" id="scns"></div>
+  <div class="note" id="note">ابدأ باختيار بطاقة من أي مجموعة.</div>
+  <div class="win" id="win">
+    <h3 id="wh">أحسنت! 🎉</h3>
+    <p id="wt"></p>
+    <button id="again">العب مرة ثانية</button>
+  </div>
+</main>
+<script>
+const POOL=[
+ {q:1,t:'حوكمة البيانات',e:'Data Governance',s:'من الذي يحدد القواعد والمسؤوليات الخاصة بالبيانات؟',x:'الإجابة: Data Governance ✅ هي اللي تحدد القواعد والمسؤوليات وتراقب الالتزام.'},
+ {q:1,t:'جودة البيانات',e:'Data Quality',s:'إذا كانت بيانات العملاء مكررة، فما المجال الذي يقيس هذه المشكلة؟',x:'الإجابة: Data Quality ✅ تقيس مشاكل مثل التكرار والأخطاء والنقص.'},
+ {q:1,t:'أمين البيانات',e:'Data Steward',s:'من يتابع جودة البيانات وتعريفاتها في العمل اليومي عادةً؟',x:'الإجابة: Data Steward ✅ يتابع الجودة والتعريفات يوميًا.'},
+ {t:'مالك البيانات',e:'Data Owner',s:'عميد الكلية يوافق أو يرفض أي قرار يخص بيانات كليته.',x:'مالك البيانات: أمين بيانات له صلاحية اعتماد القرارات.'},
+ {t:'سياسة البيانات',e:'Data Policy',s:'قاعدة مكتوبة: ممنوع مشاركة بيانات الطلاب مع جهة خارجية.',x:'السياسة: تقول ماذا يجب وماذا لا يجب (الـ What).'},
+ {t:'الإجراء',e:'Procedure',s:'خطوات مكتوبة توضح كيف تطلب صلاحية الدخول للنظام.',x:'الإجراء: يشرح الكيفية خطوة بخطوة (الـ How).'},
+ {t:'قاموس المصطلحات',e:'Business Glossary',s:'ملف يشرح معنى كل كلمة تستخدمها الجامعة، مثل: من هو الطالب النشط؟',x:'القاموس: قائمة مصطلحات وتعريفات موحّدة يرجع لها الجميع.'},
+ {t:'أمن البيانات',e:'Data Security',s:'الملفات المهمة عليها كلمة سر عشان ما أحد يدخلها.',x:'الأمن: حماية البيانات من الدخول أو التلاعب غير المسموح.'},
+ {t:'المقاييس',e:'Metrics',s:'لوحة تعرض نسبة الموظفين الملتزمين بالقواعد هذا الشهر.',x:'المقاييس: أرقام تثبت أن الحوكمة تشتغل وتفيد.'},
+ {t:'خصوصية البيانات',e:'Data Privacy',s:'موظف رفض يعطي بيانات طالب لشخص ما له صلاحية عليها.',x:'الخصوصية: حماية المعلومات الشخصية من أي شخص غير مصرح له.'},
+];
+const $=id=>document.getElementById(id);
+const LIMIT=90;let tid,left=LIMIT,started=false,ended=false;
+function start(){
+  if(started)return;started=true;
+  tid=setInterval(()=>{
+    left--;$('tm').textContent=left;
+    if(left<=0){clearInterval(tid);ended=true;$('wh').textContent='انتهى الوقت ⏱';$('wt').textContent='طابقت '+matched+' من 6. جرّب مرة ثانية!';$('win').classList.add('show')}
+  },1000);
+}
+let round,sel,matched,tries,locked;
+const shuf=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
+function build(){
+  clearInterval(tid);left=LIMIT;started=false;ended=false;$('tm').textContent=left;$('wh').textContent='أحسنت! 🎉';
+  round=POOL.filter(d=>d.q).concat(shuf(POOL.filter(d=>!d.q)).slice(0,3));sel={t:null,s:null};matched=0;tries=0;locked=false;
+  $('terms').innerHTML='';$('scns').innerHTML='';
+  shuf(round).forEach((d,i)=>mk('terms','term',d,`${d.t}<small>${d.e}</small>`));
+  shuf(round).forEach(d=>mk('scns','scn',d,d.s));
+  $('win').classList.remove('show');
+  $('note').textContent='ابدأ باختيار بطاقة من أي مجموعة.';
+  upd();
+}
+function mk(box,kind,d,html){
+  const b=document.createElement('button');
+  b.className='card '+kind;b.innerHTML=html;b.dataset.k=kind;b.dataset.id=d.e;
+  b.onclick=()=>pick(b);$(box).appendChild(b);
+}
+function pick(b){
+  if(locked||ended)return;start();
+  const k=b.dataset.k==='term'?'t':'s';
+  if(sel[k]===b){b.classList.remove('sel');sel[k]=null;return}
+  if(sel[k])sel[k].classList.remove('sel');
+  sel[k]=b;b.classList.add('sel');
+  if(sel.t&&sel.s)check();
+}
+function check(){
+  tries++;locked=true;
+  const a=sel.t,b=sel.s;
+  if(a.dataset.id===b.dataset.id){
+    matched++;
+    [a,b].forEach(c=>{c.classList.remove('sel');c.classList.add('ok')});
+    $('note').textContent='✅ '+round.find(d=>d.e===a.dataset.id).x;
+    sel={t:null,s:null};locked=false;
+    if(matched===6){clearInterval(tid);$('wt').textContent='طابقت كل البطاقات في '+tries+' محاولة.';$('win').classList.add('show')}
+  }else{
+    [a,b].forEach(c=>c.classList.add('bad'));
+    $('note').textContent='❌ مو مناسب، جرّب موقفًا ثانيًا.';
+    setTimeout(()=>{[a,b].forEach(c=>c.classList.remove('bad','sel'));sel={t:null,s:null};locked=false},600);
+  }
+  upd();
+}
+function upd(){$('m').textContent=matched;$('t').textContent=tries;$('p').style.width=(matched/6*100)+'%'}
+$('r').onclick=build;$('again').onclick=build;
+build();
+</script>
+</body>
+</html>
